@@ -1,7 +1,6 @@
 package cat.itb.m09.apirestarian.model.entities;
 
 import lombok.Data;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
