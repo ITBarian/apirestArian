@@ -15,6 +15,14 @@ public class ServiceUsers {
 
     private final PasswordEncoder xifrat;
 
+    public Users consultarPerUsername(String username) {
+        return repoUsers.findByUsername(username).orElse(null);
+    }
+
+    public Users consultarPerId(Long id){
+        return repoUsers.findById(id).orElse(null);
+    }
+
     public Users findByUser(String username) {
         return repoUsers.findByUsername(username).orElse(null);
     }

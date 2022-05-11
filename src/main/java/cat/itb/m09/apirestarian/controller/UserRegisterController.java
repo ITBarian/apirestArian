@@ -3,59 +3,51 @@ package cat.itb.m09.apirestarian.controller;
 import cat.itb.m09.apirestarian.model.entities.Users;
 import cat.itb.m09.apirestarian.model.entities.UsersDTO;
 import cat.itb.m09.apirestarian.model.services.ServiceUsers;
+import cat.itb.m09.apirestarian.security.jwt.jwt.JwtProvider;
+import cat.itb.m09.apirestarian.security.jwt.jwt.LoginPassword;
+import cat.itb.m09.apirestarian.security.jwt.jwt.UserJwt;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 public class UserRegisterController {
-    private final ServiceUsers serviceUsers;
+    private final ServiceUsers serveiUsuaris;
+    private final AuthenticationManager authenticationManager;
+    private final JwtProvider tokenProvider;
 
-
-    @GetMapping("/me")
-    public UsersDTO findWho(@AuthenticationPrincipal Users user) {
-        return new UsersDTO(user.getUsername(), user.getRol());
-    }
-
-    /*
+    @PostMapping("/login")
+    public ResponseEntity<UserJwt> login(@RequestBody LoginPassword userPassword)
     {
-    "username":"Montse",
-    "password":"1234",
-    "avatar":"http://imatge.com"
-    }
-    Afegeix id automàticament
-     */
-    @PostMapping("/users")
-    public ResponseEntity<?> newUser(@RequestBody Users newUser) {
-        try {
-            Users createUser = serviceUsers.createNewUser(newUser);
-            UsersDTO usersDTO = new UsersDTO(createUser.getUsername(), createUser.getRol());
-            return new ResponseEntity<UsersDTO>(usersDTO, HttpStatus.CREATED);
-        } catch (DataIntegrityViolationException ex) {
-            //per si intentem afegir 2 usuaris amb el mateix username, saltarà excepció
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
-        }
+        Authentication auth=authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(userPassword.getUsername(),userPassword.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        Users usu=(Users) auth.getPrincipal();
+        String jwtToken = tokenProvider.generateToken(auth);
+        UserJwt usu2=new UserJwt(usu.getUsername(),usu.getRol(),jwtToken);
+        //es retorna userName, Avatar, Rol i Token
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(usu2);
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<?> listUsersDTO() {
-        List<Users> allUsers = serviceUsers.listAllUsers();
-        List<UsersDTO> blankList = new ArrayList();
-        for (Users user : allUsers) {
-            blankList.add(new UsersDTO(user.getUsername(), user.getRol()));
-        }
-        if (allUsers.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        } else return ResponseEntity.ok(blankList);
+
+    @GetMapping("/login")
+    public UsersDTO login(@AuthenticationPrincipal Users usu){
+        UsersDTO usu2=new UsersDTO(usu.getUsername(),usu.getRol());
+        return usu2;
     }
+
+
+
 }

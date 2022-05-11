@@ -1,4 +1,4 @@
-package cat.itb.m09.apirestarian.security;
+package cat.itb.m09.apirestarian.security.jwt;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class PasswordEncoderConfig {
 
     @Bean
-    public PasswordEncoder cypher() {
+    public PasswordEncoder xifrat() {
         return new BCryptPasswordEncoder();
     }
 
